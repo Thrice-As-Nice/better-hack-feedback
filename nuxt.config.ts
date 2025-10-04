@@ -8,4 +8,8 @@ export default defineNuxtConfig({
       allowedHosts: ['tgminiappauth.share.zrok.io'],
     },
   },
+  components: {
+    global: true,
+    dirs: ['~/components']
+  }
 })
