@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.nuxt/
+dist/
+.output/
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# Generated files
+.nuxt/
+
+# Lock files
+bun.lock
+package-lock.json
+yarn.lock
+
+# Config files that shouldn't be formatted
+*.config.js
+*.config.ts
