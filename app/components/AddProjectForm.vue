@@ -4,9 +4,7 @@
 
     <form class="space-y-6" @submit.prevent="handleSubmit">
       <div>
-        <label for="name" class="block text-white font-semibold mb-2">
-          Project Name *
-        </label>
+        <label for="name" class="block text-white font-semibold mb-2"> Project Name * </label>
         <input
           id="name"
           v-model="formData.name"
@@ -18,9 +16,7 @@
       </div>
 
       <div>
-        <label for="description" class="block text-white font-semibold mb-2">
-          Description
-        </label>
+        <label for="description" class="block text-white font-semibold mb-2"> Description </label>
         <textarea
           id="description"
           v-model="formData.description"
@@ -31,9 +27,7 @@
       </div>
 
       <div>
-        <label for="groupName" class="block text-white font-semibold mb-2">
-          Team/Group Name
-        </label>
+        <label for="groupName" class="block text-white font-semibold mb-2"> Team/Group Name </label>
         <input
           id="groupName"
           v-model="formData.groupName"

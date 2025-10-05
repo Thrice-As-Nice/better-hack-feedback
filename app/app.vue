@@ -82,6 +82,7 @@
     description: string
     team: string
     votes: number
+    hasVoted: boolean
   }
 
   interface FeedbackData {
@@ -140,6 +141,7 @@
           description: project.description || '',
           team: project.groupName || 'Individual',
           votes: project.vote_count,
+          hasVoted: project.hasVoted,
         }))
       }
     } catch (error) {
@@ -196,7 +198,7 @@
       if (response.success) {
         // Refresh the projects list to include the new project
         await fetchProjects()
-        
+
         // Switch to vote tab to show the new project
         activeTab.value = 'vote'
       }
@@ -207,13 +209,63 @@
   }
 
   const handleProjectVote = async (projectId: string) => {
-    // TODO: Submit vote to API
-    console.log('Voted for project:', projectId)
+    // Find the project in our local state
+    const projectIndex = projects.value.findIndex((p) => p.id === projectId)
+    if (projectIndex === -1) {
+      console.error('Project not found:', projectId)
+      return
+    }
 
-    // Optimistic update
-    const project = projects.value.find((p) => p.id === projectId)
-    if (project) {
-      project.votes++
+    const project = projects.value[projectIndex]
+
+    // Prevent voting if already voted
+    if (project.hasVoted) {
+      console.warn('User has already voted for this project')
+      return
+    }
+
+    // Store original state for potential rollback
+    const originalVotes = project.votes
+    const originalHasVoted = project.hasVoted
+
+    try {
+      // Optimistic UI update - update immediately
+      projects.value[projectIndex] = {
+        ...project,
+        votes: project.votes + 1,
+        hasVoted: true,
+      }
+
+      // Make API call
+      const response = await $fetch(`/api/projects/${projectId}/vote`, {
+        method: 'POST',
+      })
+
+      if (response.success) {
+        // API call succeeded - update with server data to ensure consistency
+        projects.value[projectIndex] = {
+          ...project,
+          votes: response.project.vote_count,
+          hasVoted: true,
+        }
+        console.log('Vote recorded successfully')
+      }
+    } catch (error) {
+      // Rollback optimistic update on error
+      projects.value[projectIndex] = {
+        ...project,
+        votes: originalVotes,
+        hasVoted: originalHasVoted,
+      }
+
+      console.error('Error voting for project:', error)
+
+      // Show user-friendly error message
+      if (error.status === 409) {
+        console.warn('You have already voted for this project')
+      } else {
+        console.error('Failed to record vote. Please try again.')
+      }
     }
   }
 </script>

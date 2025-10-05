@@ -1,6 +1,6 @@
-import { db, projects } from '../drizzle/schema'
+import { db, projects, votes } from '../drizzle/schema'
 import { auth } from '../lib/auth'
-import { desc } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -9,23 +9,37 @@ export default defineEventHandler(async (event) => {
       headers: getHeaders(event),
     })
 
-    if (!session) {
+    if (!session?.user) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Unauthorized',
       })
     }
 
-    // Fetch all projects, ordered by creation date (newest first)
+    // Fetch all projects
     const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt))
+
+    // Get user's votes to determine which projects they've voted for
+    const userVotes = await db
+      .select({ projectId: votes.projectId })
+      .from(votes)
+      .where(eq(votes.userId, session.user.id))
+
+    const votedProjectIds = new Set(userVotes.map((vote) => vote.projectId))
+
+    // Add hasVoted flag to each project
+    const projectsWithVoteStatus = allProjects.map((project) => ({
+      ...project,
+      hasVoted: votedProjectIds.has(project.id),
+    }))
 
     return {
       success: true,
-      projects: allProjects,
+      projects: projectsWithVoteStatus,
     }
   } catch (error) {
     console.error('Error fetching projects:', error)
-    
+
     // If it's already a HTTP error, re-throw it
     if (error.statusCode) {
       throw error

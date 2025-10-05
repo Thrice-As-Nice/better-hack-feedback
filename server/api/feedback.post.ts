@@ -39,13 +39,16 @@ export default defineEventHandler(async (event) => {
     const feedbackId = `feedback_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
     // Insert new feedback into database
-    const newFeedback = await db.insert(feedback).values({
-      id: feedbackId,
-      userId: session.user.id,
-      rating_count: rating,
-      positive_feedback: liked?.trim() || null,
-      negative_feedback: improvements?.trim() || null,
-    }).returning()
+    const newFeedback = await db
+      .insert(feedback)
+      .values({
+        id: feedbackId,
+        userId: session.user.id,
+        rating_count: rating,
+        positive_feedback: liked?.trim() || null,
+        negative_feedback: improvements?.trim() || null,
+      })
+      .returning()
 
     return {
       success: true,
@@ -53,7 +56,7 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error) {
     console.error('Error creating feedback:', error)
-    
+
     // If it's already a HTTP error, re-throw it
     if (error.statusCode) {
       throw error

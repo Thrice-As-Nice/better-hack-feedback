@@ -39,13 +39,16 @@ export default defineEventHandler(async (event) => {
     const projectId = `project_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
     // Insert new project into database
-    const newProject = await db.insert(projects).values({
-      id: projectId,
-      name: name.trim(),
-      description: description?.trim() || null,
-      groupName: groupName?.trim() || null,
-      vote_count: 0,
-    }).returning()
+    const newProject = await db
+      .insert(projects)
+      .values({
+        id: projectId,
+        name: name.trim(),
+        description: description?.trim() || null,
+        groupName: groupName?.trim() || null,
+        vote_count: 0,
+      })
+      .returning()
 
     return {
       success: true,
@@ -53,7 +56,7 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error) {
     console.error('Error creating project:', error)
-    
+
     // If it's already a HTTP error, re-throw it
     if (error.statusCode) {
       throw error
