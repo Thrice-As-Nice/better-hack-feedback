@@ -47,6 +47,10 @@
         <div v-if="activeTab === 'add-project'">
           <AddProjectForm @submit="handleProjectSubmit" />
         </div>
+
+        <div v-if="activeTab === 'view-feedbacks'">
+          <ViewFeedbacks />
+        </div>
       </main>
     </div>
 
