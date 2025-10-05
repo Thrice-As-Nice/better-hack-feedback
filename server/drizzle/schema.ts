@@ -82,5 +82,22 @@ export const verification = sqliteTable('verification', {
     .notNull(),
 })
 
+export const feedback = sqliteTable('feedback', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  rating_count: integer('rating_count').notNull(),
+  positive_feedback: text('positive_feedback'),
+  negative_feedback: text('negative_feedback'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+})
+
 const sqlite = new Database('./server/data/db.sqlite')
-export const db = drizzle(sqlite, { schema: { user, session, account, verification } })
+export const db = drizzle(sqlite, { schema: { user, session, account, verification, feedback } })
