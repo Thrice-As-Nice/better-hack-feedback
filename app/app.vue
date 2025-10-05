@@ -3,7 +3,7 @@
     <!-- Loading state -->
     <div v-if="isAuthenticating" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
         <p class="text-white">Authenticating...</p>
       </div>
     </div>
@@ -15,8 +15,8 @@
         <h2 class="text-xl font-bold text-white mb-2">Authentication Error</h2>
         <p class="text-gray-400 mb-4">{{ authError }}</p>
         <button
-          @click="initializeAuth"
           class="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors"
+          @click="initializeAuth"
         >
           Try Again
         </button>
@@ -46,7 +46,8 @@
         <div class="text-blue-400 text-6xl mb-4">📱</div>
         <h2 class="text-xl font-bold text-white mb-2">Telegram Mini App</h2>
         <p class="text-gray-400 mb-4">
-          This app requires authentication through Telegram. Please access it through a Telegram Mini App.
+          This app requires authentication through Telegram. Please access it through a Telegram
+          Mini App.
         </p>
       </div>
     </div>
@@ -55,7 +56,7 @@
 
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
-  import { authenticateWithTelegram, authClient } from './lib/client'
+  import { getTelegramInitData, authClient } from './lib/client'
 
   interface User {
     id: string
@@ -87,7 +88,7 @@
 
   const activeTab = ref('feedback')
   const user = ref<User | null>(null)
-  const isAuthenticating = ref(false)
+  const isAuthenticating = ref(true)
   const authError = ref<string | null>(null)
 
   const projects = ref<Project[]>([
@@ -130,34 +131,12 @@
       isAuthenticating.value = true
       authError.value = null
 
-      // Check if we have Telegram init data to authenticate with
-      const hasInitData = typeof window !== 'undefined' &&
-        (window.location.hash.startsWith('#tgWebAppData=') ||
-         new URLSearchParams(window.location.search).has('tgWebAppData'))
+      await authClient.signIn.telegramMiniApp({
+        initData: getTelegramInitData(),
+      })
 
-      if (hasInitData) {
-        // Authenticate with Telegram
-        const authResult = await authenticateWithTelegram()
-        user.value = {
-          id: authResult.user.id,
-          name: authResult.user.name || 'Unknown User',
-          username: (authResult.user as TelegramUser).username,
-          photoUrl: (authResult.user as TelegramUser).photoUrl,
-          isPremium: (authResult.user as TelegramUser).isPremium,
-        }
-      } else {
-        // Try to get existing session
-        const session = await authClient.getSession()
-        if (session?.data) {
-          user.value = {
-            id: session.data.user.id,
-            name: session.data.user.name || 'Unknown User',
-            username: (session.data.user as TelegramUser).username,
-            photoUrl: (session.data.user as TelegramUser).photoUrl,
-            isPremium: (session.data.user as TelegramUser).isPremium,
-          }
-        }
-      }
+      const session = await authClient.getSession()
+      user.value = session?.data?.user || (null as TelegramUser)
     } catch (error) {
       console.error('Authentication error:', error)
       authError.value = error instanceof Error ? error.message : 'Authentication failed'
