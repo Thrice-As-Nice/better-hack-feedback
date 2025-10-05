@@ -115,4 +115,4 @@ export const projects = sqliteTable('projects', {
 })
 
 const sqlite = new Database('./server/data/db.sqlite')
-export const db = drizzle(sqlite, { schema: { user, session, account, verification, feedback } })
+export const db = drizzle(sqlite, { schema: { user, session, account, verification, feedback, projects } })
