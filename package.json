@@ -19,7 +19,8 @@
     "drizzle-orm": "^0.44.6",
     "nuxt": "^4.1.2",
     "vue": "^3.5.22",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "tg-mini-auth": "file:../better-hack-thrice"
   },
   "devDependencies": {
     "@nuxt/eslint-config": "^1.9.0",

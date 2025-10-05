@@ -110,7 +110,7 @@
   }
 
   const props = defineProps<{
-    user?: User
+    user: User
   }>()
 
   const emit = defineEmits<{
