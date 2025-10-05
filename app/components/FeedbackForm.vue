@@ -3,7 +3,7 @@
     <h2 class="text-2xl font-bold text-white mb-6">Share Your Hackathon Experience</h2>
 
     <form class="space-y-6" @submit.prevent="handleSubmit">
-      <div>
+      <div class="flex items-center gap-2 flex-col">
         <label class="block text-white font-semibold mb-3"> Overall Rating </label>
         <StarRating v-model="formData.rating" />
       </div>
