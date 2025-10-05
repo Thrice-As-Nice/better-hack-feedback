@@ -99,5 +99,20 @@ export const feedback = sqliteTable('feedback', {
     .notNull(),
 })
 
+export const projects = sqliteTable('projects', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  groupName: text('group_name'),
+  vote_count: integer('vote_count').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+})
+
 const sqlite = new Database('./server/data/db.sqlite')
 export const db = drizzle(sqlite, { schema: { user, session, account, verification, feedback } })
