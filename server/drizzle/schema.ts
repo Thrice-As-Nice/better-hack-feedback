@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import Database from 'better-sqlite3'
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import Database from 'better-sqlite3'
+import { drizzle } from 'drizzle-orm/better-sqlite3'
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -17,7 +17,6 @@ export const user = sqliteTable('user', {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   telegramId: text('telegram_id').unique(),
-
   isPremium: integer('is_premium', { mode: 'boolean' }),
   firstName: text('first_name').notNull(),
   lastName: text('last_name'),
@@ -40,6 +39,7 @@ export const session = sqliteTable('session', {
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
+  activeOrganizationId: text('active_organization_id'),
 })
 
 export const account = sqliteTable('account', {
@@ -80,6 +80,41 @@ export const verification = sqliteTable('verification', {
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+})
+
+export const organization = sqliteTable('organization', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  logo: text('logo'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  metadata: text('metadata'),
+})
+
+export const member = sqliteTable('member', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  role: text('role').default('member').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+})
+
+export const invitation = sqliteTable('invitation', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  email: text('email').notNull(),
+  role: text('role'),
+  status: text('status').default('pending').notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  inviterId: text('inviter_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
 })
 
 export const feedback = sqliteTable('feedback', {
@@ -129,5 +164,16 @@ export const votes = sqliteTable('votes', {
 
 const sqlite = new Database('./server/data/db.sqlite')
 export const db = drizzle(sqlite, {
-  schema: { user, session, account, verification, feedback, projects, votes },
+  schema: {
+    user,
+    session,
+    account,
+    verification,
+    feedback,
+    projects,
+    votes,
+    organization,
+    member,
+    invitation,
+  },
 })

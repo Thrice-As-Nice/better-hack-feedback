@@ -23,9 +23,15 @@
       </div>
 
       <button
-        :disabled="hasVoted || isVoting"
+        :disabled="hasVoted || isVoting || disabled"
         class="py-2 px-6 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        :class="[hasVoted ? 'bg-gray-800 text-gray-400' : 'bg-white text-black hover:bg-gray-200']"
+        :class="[
+          hasVoted
+            ? 'bg-gray-800 text-gray-400'
+            : disabled
+              ? 'bg-gray-700 text-gray-500'
+              : 'bg-white text-black hover:bg-gray-200',
+        ]"
         @click="handleVote"
       >
         <span v-if="hasVoted" class="flex items-center gap-2">
@@ -58,6 +64,7 @@
   const props = defineProps<{
     project: Project
     hasVoted: boolean
+    disabled?: boolean
   }>()
 
   const emit = defineEmits<{
@@ -67,7 +74,7 @@
   const isVoting = ref(false)
 
   const handleVote = async () => {
-    if (props.hasVoted || isVoting.value) return
+    if (props.hasVoted || isVoting.value || props.disabled) return
 
     isVoting.value = true
     try {

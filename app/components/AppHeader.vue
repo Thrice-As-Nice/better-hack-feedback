@@ -72,10 +72,6 @@
 
                 <div class="space-y-2 mb-4">
                   <div class="flex items-center gap-2 text-sm">
-                    <span class="text-gray-500">User ID:</span>
-                    <span class="text-gray-900 font-mono">{{ user?.id || 'N/A' }}</span>
-                  </div>
-                  <div class="flex items-center gap-2 text-sm">
                     <span class="text-gray-500">Session:</span>
                     <span class="text-green-600 font-semibold">Active</span>
                   </div>

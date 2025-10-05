@@ -35,7 +35,13 @@
         </div>
 
         <div v-if="activeTab === 'vote'">
-          <VoteProjects :projects="projects" @vote="handleProjectVote" />
+          <VoteProjects
+            :projects="projects"
+            :remaining-votes="remainingVotes"
+            :max-votes="maxVotes"
+            :user-vote-count="userVoteCount"
+            @vote="handleProjectVote"
+          />
         </div>
 
         <div v-if="activeTab === 'add-project'">
@@ -103,6 +109,9 @@
   const authError = ref<string | null>(null)
 
   const projects = ref<Project[]>([])
+  const userVoteCount = ref(0)
+  const maxVotes = ref(3)
+  const remainingVotes = ref(3)
 
   onMounted(async () => {
     await initializeAuth()
@@ -143,6 +152,11 @@
           votes: project.vote_count,
           hasVoted: project.hasVoted,
         }))
+
+        // Update vote limit tracking
+        userVoteCount.value = response.userVoteCount || 0
+        maxVotes.value = response.maxVotes || 3
+        remainingVotes.value = response.remainingVotes || 3
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -224,9 +238,17 @@
       return
     }
 
+    // Prevent voting if user has reached vote limit
+    if (remainingVotes.value <= 0) {
+      console.warn('You have reached the maximum limit of 3 votes')
+      return
+    }
+
     // Store original state for potential rollback
     const originalVotes = project.votes
     const originalHasVoted = project.hasVoted
+    const originalUserVoteCount = userVoteCount.value
+    const originalRemainingVotes = remainingVotes.value
 
     try {
       // Optimistic UI update - update immediately
@@ -235,6 +257,8 @@
         votes: project.votes + 1,
         hasVoted: true,
       }
+      userVoteCount.value += 1
+      remainingVotes.value -= 1
 
       // Make API call
       const response = await $fetch(`/api/projects/${projectId}/vote`, {
@@ -257,12 +281,16 @@
         votes: originalVotes,
         hasVoted: originalHasVoted,
       }
+      userVoteCount.value = originalUserVoteCount
+      remainingVotes.value = originalRemainingVotes
 
       console.error('Error voting for project:', error)
 
-      // Show user-friendly error message
+      // Show user-friendly error message based on error type
       if (error.status === 409) {
         console.warn('You have already voted for this project')
+      } else if (error.status === 403) {
+        console.warn('You have reached the maximum limit of 3 votes')
       } else {
         console.error('Failed to record vote. Please try again.')
       }

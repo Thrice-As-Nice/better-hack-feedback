@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { telegramMiniAppAuth } from 'tg-mini-auth'
 import { db } from '../drizzle/schema'
+import { organization } from 'better-auth/plugins'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -11,5 +12,6 @@ export const auth = betterAuth({
     telegramMiniAppAuth({
       botToken: process.env.TELEGRAM_BOT_TOKEN ?? '',
     }),
+    organization(),
   ],
 })

@@ -56,6 +56,21 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Check if user has reached the 3-vote limit
+    const userVoteCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(votes)
+      .where(eq(votes.userId, session.user.id))
+
+    const currentVoteCount = userVoteCount[0]?.count || 0
+
+    if (currentVoteCount >= 3) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'You have reached the maximum limit of 3 votes',
+      })
+    }
+
     // Use database transaction to ensure consistency
     const result = await db.transaction((tx) => {
       // Create the vote record

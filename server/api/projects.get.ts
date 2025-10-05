@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Fetch all projects
-    const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt))
+    const allProjects = await db.select().from(projects).orderBy(desc(projects.vote_count))
 
     // Get user's votes to determine which projects they've voted for
     const userVotes = await db
@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
       .where(eq(votes.userId, session.user.id))
 
     const votedProjectIds = new Set(userVotes.map((vote) => vote.projectId))
+    const totalUserVotes = userVotes.length
 
     // Add hasVoted flag to each project
     const projectsWithVoteStatus = allProjects.map((project) => ({
@@ -36,6 +37,9 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       projects: projectsWithVoteStatus,
+      userVoteCount: totalUserVotes,
+      maxVotes: 3,
+      remainingVotes: Math.max(0, 3 - totalUserVotes),
     }
   } catch (error) {
     console.error('Error fetching projects:', error)
