@@ -7,7 +7,7 @@
           :key="tab.id"
           class="relative py-4 px-2 text-sm font-medium transition-colors focus:outline-none"
           :class="[modelValue === tab.id ? 'text-white' : 'text-gray-400 hover:text-gray-300']"
-          @click="emit('change', tab.id)"
+          @click="$emit('change', tab.id)"
         >
           <div class="flex items-center gap-2">
             <svg
@@ -82,17 +82,19 @@
   interface Tab {
     id: string
     label: string
+    adminOnly?: boolean
   }
 
   const props = defineProps<{
     modelValue: string
+    isAuthorized?: boolean
   }>()
 
-  const emit = defineEmits<{
+  defineEmits<{
     change: [tabId: string]
   }>()
 
-  const tabs: Tab[] = [
+  const allTabs: Tab[] = [
     {
       id: 'feedback',
       label: 'Feedback',
@@ -104,10 +106,22 @@
     {
       id: 'add-project',
       label: 'Add Project',
+      adminOnly: true,
     },
     {
       id: 'view-feedbacks',
       label: 'View Feedbacks',
+      adminOnly: true,
     },
   ]
+
+  // Filter tabs based on authorization
+  const tabs = computed(() => {
+    return allTabs.filter(tab => {
+      if (tab.adminOnly) {
+        return props.isAuthorized === true
+      }
+      return true
+    })
+  })
 </script>

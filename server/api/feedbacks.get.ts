@@ -1,5 +1,6 @@
 import { db, feedback, user } from '../drizzle/schema'
 import { auth } from '../lib/auth'
+import { requireAuthorization } from '../lib/admin'
 import { desc, eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -15,6 +16,9 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Unauthorized',
       })
     }
+
+    // Check if user is authorized (admin)
+    await requireAuthorization(event)
 
     // Fetch all feedbacks with user information, ordered by creation date (newest first)
     const allFeedbacks = await db

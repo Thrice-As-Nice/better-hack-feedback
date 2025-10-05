@@ -27,7 +27,7 @@
     <div v-else-if="user">
       <AppHeader :user="user" @logout="handleLogout" />
 
-      <TabNavigation v-model="activeTab" @change="handleTabChange" />
+      <TabNavigation v-model="activeTab" :is-authorized="isAuthorized" @change="handleTabChange" />
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div v-if="activeTab === 'feedback'">
@@ -45,11 +45,25 @@
         </div>
 
         <div v-if="activeTab === 'add-project'">
-          <AddProjectForm @submit="handleProjectSubmit" />
+          <div v-if="isAuthorized">
+            <AddProjectForm @submit="handleProjectSubmit" />
+          </div>
+          <div v-else class="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center">
+            <div class="text-red-400 text-4xl mb-4">🔒</div>
+            <h3 class="text-xl font-bold text-white mb-2">Access Restricted</h3>
+            <p class="text-gray-400">You don't have permission to add projects.</p>
+          </div>
         </div>
 
         <div v-if="activeTab === 'view-feedbacks'">
-          <ViewFeedbacks />
+          <div v-if="isAuthorized">
+            <ViewFeedbacks />
+          </div>
+          <div v-else class="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center">
+            <div class="text-red-400 text-4xl mb-4">🔒</div>
+            <h3 class="text-xl font-bold text-white mb-2">Access Restricted</h3>
+            <p class="text-gray-400">You don't have permission to view feedbacks.</p>
+          </div>
         </div>
       </main>
     </div>
@@ -69,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { getTelegramInitData, authClient } from './lib/client'
 
   interface User {
@@ -117,10 +131,27 @@
   const maxVotes = ref(3)
   const remainingVotes = ref(3)
 
+  // Authorization state
+  const { isAuthorized, isChecking, checkAuthorization } = useAuth()
+
   onMounted(async () => {
     await initializeAuth()
     if (user.value) {
       await fetchProjects()
+      // Check authorization after authentication
+      await checkAuthorization()
+      
+      // Redirect away from admin tabs if not authorized
+      if (!isAuthorized.value && (activeTab.value === 'add-project' || activeTab.value === 'view-feedbacks')) {
+        activeTab.value = 'feedback'
+      }
+    }
+  })
+
+  // Watch for authorization changes and redirect if necessary
+  watch(isAuthorized, (newIsAuthorized) => {
+    if (!newIsAuthorized && (activeTab.value === 'add-project' || activeTab.value === 'view-feedbacks')) {
+      activeTab.value = 'feedback'
     }
   })
 

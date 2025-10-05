@@ -1,5 +1,6 @@
 import { db, projects } from '../drizzle/schema'
 import { auth } from '../lib/auth'
+import { requireAuthorization } from '../lib/admin'
 
 export default defineEventHandler(async (event) => {
   // Only allow POST requests
@@ -22,6 +23,9 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Unauthorized',
       })
     }
+
+    // Check if user is authorized (admin)
+    await requireAuthorization(event)
 
     // Parse request body
     const body = await readBody(event)
