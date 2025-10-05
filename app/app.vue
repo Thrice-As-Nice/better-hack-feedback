@@ -37,6 +37,10 @@
         <div v-if="activeTab === 'vote'">
           <VoteProjects :projects="projects" @vote="handleProjectVote" />
         </div>
+
+        <div v-if="activeTab === 'add-project'">
+          <AddProjectForm @submit="handleProjectSubmit" />
+        </div>
       </main>
     </div>
 
@@ -86,44 +90,24 @@
     improvements: string
   }
 
+  interface ProjectData {
+    name: string
+    description: string
+    groupName: string
+  }
+
   const activeTab = ref('feedback')
   const user = ref<User | null>(null)
   const isAuthenticating = ref(true)
   const authError = ref<string | null>(null)
 
-  const projects = ref<Project[]>([
-    {
-      id: '1',
-      name: 'AI Code Assistant',
-      description: 'An intelligent coding companion powered by machine learning',
-      team: 'Team Alpha',
-      votes: 42,
-    },
-    {
-      id: '2',
-      name: 'Better Auth Mini App Plugin',
-      description: 'Telegram Mini App authentication for Better Auth framework',
-      team: 'Team Beta',
-      votes: 38,
-    },
-    {
-      id: '3',
-      name: 'DevOps Dashboard',
-      description: 'Real-time monitoring and deployment management tool',
-      team: 'Team Gamma',
-      votes: 35,
-    },
-    {
-      id: '4',
-      name: 'Smart Calendar',
-      description: 'AI-powered scheduling assistant with smart suggestions',
-      team: 'Team Delta',
-      votes: 31,
-    },
-  ])
+  const projects = ref<Project[]>([])
 
   onMounted(async () => {
     await initializeAuth()
+    if (user.value) {
+      await fetchProjects()
+    }
   })
 
   const initializeAuth = async () => {
@@ -145,6 +129,26 @@
     }
   }
 
+  const fetchProjects = async () => {
+    try {
+      const response = await $fetch('/api/projects')
+      if (response.success) {
+        // Map database fields to frontend interface
+        projects.value = response.projects.map((project: any) => ({
+          id: project.id,
+          name: project.name,
+          description: project.description || '',
+          team: project.groupName || 'Individual',
+          votes: project.vote_count,
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error)
+      // Keep empty array if fetch fails
+      projects.value = []
+    }
+  }
+
   const handleTabChange = (tabId: string) => {
     activeTab.value = tabId
   }
@@ -159,8 +163,47 @@
   }
 
   const handleFeedbackSubmit = async (data: FeedbackData) => {
-    // TODO: Submit feedback to API
-    console.log('Feedback submitted:', data)
+    try {
+      const response = await $fetch('/api/feedback', {
+        method: 'POST',
+        body: {
+          rating: data.rating,
+          liked: data.liked,
+          improvements: data.improvements,
+        },
+      })
+
+      if (response.success) {
+        console.log('Feedback submitted successfully:', response.feedback)
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error)
+      throw error
+    }
+  }
+
+  const handleProjectSubmit = async (data: ProjectData) => {
+    try {
+      const response = await $fetch('/api/projects', {
+        method: 'POST',
+        body: {
+          name: data.name,
+          description: data.description,
+          groupName: data.groupName,
+        },
+      })
+
+      if (response.success) {
+        // Refresh the projects list to include the new project
+        await fetchProjects()
+        
+        // Switch to vote tab to show the new project
+        activeTab.value = 'vote'
+      }
+    } catch (error) {
+      console.error('Error submitting project:', error)
+      throw error
+    }
   }
 
   const handleProjectVote = async (projectId: string) => {
