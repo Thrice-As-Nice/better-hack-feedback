@@ -1,6 +1,6 @@
 <template>
   <div class="bg-gray-900 rounded-xl p-8 border border-gray-800">
-    <h2 class="text-2xl font-bold text-white mb-6">Add Your Hackathon Project</h2>
+    <h2 class="text-2xl font-bold text-white mb-6">Add a Hackathon Project</h2>
 
     <form class="space-y-6" @submit.prevent="handleSubmit">
       <div>
