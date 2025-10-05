@@ -114,5 +114,20 @@ export const projects = sqliteTable('projects', {
     .notNull(),
 })
 
+export const votes = sqliteTable('votes', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .notNull(),
+})
+
 const sqlite = new Database('./server/data/db.sqlite')
-export const db = drizzle(sqlite, { schema: { user, session, account, verification, feedback, projects } })
+export const db = drizzle(sqlite, {
+  schema: { user, session, account, verification, feedback, projects, votes },
+})

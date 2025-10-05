@@ -2,9 +2,7 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <h2 class="text-2xl font-bold text-white">Vote for Projects</h2>
-      <div class="text-gray-400 text-sm">
-        {{ votedProjects.size }} of {{ projects.length }} voted
-      </div>
+      <div class="text-gray-400 text-sm">{{ votedCount }} of {{ projects.length }} voted</div>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
@@ -12,7 +10,7 @@
         v-for="project in projects"
         :key="project.id"
         :project="project"
-        :has-voted="votedProjects.has(project.id)"
+        :has-voted="project.hasVoted"
         @vote="handleVote"
       />
     </div>
@@ -40,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { computed } from 'vue'
 
   interface Project {
     id: string
@@ -48,6 +46,7 @@
     description: string
     team: string
     votes: number
+    hasVoted: boolean
   }
 
   const props = defineProps<{
@@ -58,10 +57,11 @@
     vote: [projectId: string]
   }>()
 
-  const votedProjects = ref<Set<string>>(new Set())
+  const votedCount = computed(() => {
+    return props.projects.filter((project) => project.hasVoted).length
+  })
 
   const handleVote = (projectId: string) => {
-    votedProjects.value.add(projectId)
     emit('vote', projectId)
   }
 </script>
